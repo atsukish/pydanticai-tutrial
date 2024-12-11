@@ -1,7 +1,9 @@
+"""Dice game"""
+
 import asyncio
 import random
 
-from pydantic_ai import Agent, RunContext, result
+from pydantic_ai import Agent, RunContext
 
 agent = Agent(
     "openai:gpt-4o-mini",
@@ -14,9 +16,10 @@ agent = Agent(
 )
 
 
+# コンテキストは不要なので`@agent.tool_plain`を使用
 @agent.tool_plain
-def roll_dice() -> str:
-    """Roll a six-sided dice and return the result.
+def roll_die() -> str:
+    """Roll a six-sided die and return the result.
 
     Returns:
         str: The result of the die roll.
@@ -24,6 +27,7 @@ def roll_dice() -> str:
     return str(random.randint(1, 6))
 
 
+# コンテキストは必要なので`@agent.tool`を使用
 @agent.tool
 def get_player_name(ctx: RunContext[str]) -> str:
     """Get the player's name.
@@ -37,25 +41,8 @@ def get_player_name(ctx: RunContext[str]) -> str:
     return ctx.deps
 
 
-async def dice_game(username: str, prompt: str) -> result.RunResult[str]:
-    """Dice game
-
-    Args:
-        username (str): The player's name.
-        prompt (str): The player's guess.
-
-    Returns:
-        result.RunResult: The result of the dice game.
-    """
-    return await agent.run(prompt, deps=username)
-
-
 async def main() -> None:
-    """Main function"""
-    dice_result = await dice_game(
-        username="たかし",
-        prompt="私の予想は「4」です",
-    )
+    dice_result = await agent.run("私の予想は「4」です", deps="たかし")
     print(dice_result.data)
     print(dice_result.all_messages())
 

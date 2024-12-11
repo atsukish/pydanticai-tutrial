@@ -1,3 +1,5 @@
+<!-- @format -->
+
 ## はじめに
 
 [TRIAL＆RetailAI Advent Calendar 2024](https://qiita.com/advent-calendar/2024/retail-ai) の 13 日目の記事です。
@@ -30,7 +32,7 @@ https://github.com/pydantic/pydantic-ai
 > - LLM を活用したアプリケーションのデバッグとパフォーマンス・動作の監視のための Logfire 統合
 
 :::note info
-2024 年 12 月時点で、PydanticAI は Beta 版という位置づけなので、API の変更がある可能性があるようです。
+執筆時点（2024 年 12 月）で、PydanticAI は Beta 版という位置づけなので、API は変更される可能性があるとのことです。
 :::
 
 ## Installation
@@ -81,7 +83,7 @@ https://ai.pydantic.dev/agents/
 
 PydanticAI における主要なインターフェースが `Agent`　です。`Agent` は単一のアプリケーションやコンポーネントを制御する役割を果たし、さらに、複数の `Agent` を組み合わせることで、より高度なワークフロー（マルチ LLM エージェント）を構築することも可能なようです。
 
-また `Agent` の設計思想は FastAPI の `app` や`router` のように一度インスタンス化されたものをアプリケーション全体で再利用することを想定しているとのことです。
+`Agent` の設計思想は FastAPI の `app` や`router` のように一度インスタンス化されたものをアプリケーション全体で再利用することを想定しているとのことです。
 
 まずは、`Agent` クラスでユーザーの問いかけに対して回答する単純なエージェントを構築してみます。
 
@@ -118,9 +120,77 @@ if __name__ == "__main__":
 
 他のフレームワークと比較すると、よりシンプルに記述できることが特徴のようです。同じ処理を OpenAI の Python ライブラリ、LangChain と比較するとその差がわかりやすいかと思います。
 
-| OpenAI Python Client                                                                                                                        | LangChain                                                                                                                                   |
-| ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| ![image-20241209084315766.png](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/866338/566c935c-f773-f0ee-de80-164cd60a4401.png) | ![image-20241209084201448.png](https://qiita-image-store.s3.ap-northeast-1.amazonaws.com/0/866338/e3b90911-7548-a000-81b1-72c4929a879c.png) |
+<details><summary>OpenAI Python Client によるサンプルコード</summary>
+
+```python:agent_openai_client.py
+"""Hello world for openai client"""
+
+import asyncio
+
+import openai
+from dotenv import load_dotenv
+
+load_dotenv()
+
+async def main():
+"""Hello world by openai client"""
+client = openai.AsyncOpenAI()
+
+    result = await client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "すべてツンデレ口調で回答してください。"},
+            {"role": "user", "content": "東ティモールの首都は？"},
+        ],
+    )
+    print(result.choices[0].message.content)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+```
+
+</details>
+
+<details><summary>LangChain によるサンプルコード</summary>
+
+```python:agent_langchain.py
+"""Hello world for langchain"""
+
+import asyncio
+
+from dotenv import load_dotenv
+from langchain_core.messages import SystemMessage
+from langchain_core.prompts import (
+    ChatPromptTemplate,
+    HumanMessagePromptTemplate,
+)
+from langchain_openai import ChatOpenAI
+
+load_dotenv()
+
+
+async def main() -> None:
+    """Hello world by langchain"""
+    llm = ChatOpenAI(model="gpt-4o-mini")
+    chat_template = ChatPromptTemplate.from_messages(
+        [
+            SystemMessage(content="すべてツンデレ口調で回答してください。"),
+            HumanMessagePromptTemplate.from_template("{question}"),
+        ],
+    )
+
+    chain = chat_template | llm
+    result = await chain.ainvoke({"question": "東ティモールの首都は？"})
+    print(result.content)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+```
+
+</details>
 
 ### System Prompts
 
@@ -257,8 +327,12 @@ if __name__ == "__main__":
 
 ```
 
-```shell:実行結果
+```shell:実行結果（負け）
 サイコロを振った結果、出た目は「2」でした。あなたの予想「4」とは一致しませんでした。また次回チャレンジしてみてください！
+```
+
+```shell:実行結果（勝ち）
+あなたの予想「4」と一致しました！おめでとうございます、たかしさんが勝者です！
 ```
 
 こちらも`result.all_messages()`で実行結果を確認してみると、Function Calling が実行されていることが確認できます。
@@ -372,11 +446,11 @@ Found 2 errors in 1 file (checked 1 source file)
 もちろん mypy による型チェックを VSCode などの IDE で有効にしておけば、IDE 上で型エラーが出力されます。
 このように、型安全性を高めることで、コードのバグを防ぐことができます。
 
-## Results (構造化レスポンス)
+## Results
 
 https://ai.pydantic.dev/results/
 
-pydantic のバリデーションを活用して、エージェントの出力結果の型安全性を高めることができます。
+pydantic を活用した構造化レスポンスです。pydantic のバリデーションを活用して、エージェントの出力結果の型安全性を高めることができます。
 この辺は Langchain の [PydanticOutputParser](https://python.langchain.com/v0.1/docs/modules/model_io/output_parsers/types/pydantic/) と同じようなイメージです。
 
 ```python:pydantic_model.py
@@ -412,6 +486,32 @@ if __name__ == "__main__":
 
 ```shell:実行結果
 {'city': '東京', 'country': '日本'}
+```
+
+`BaseModel` でなくても、`result_type` に型を指定することで、構造化レスポンスを利用することができます。
+
+```python
+"""Pydantic model example"""
+
+import asyncio
+
+from pydantic_ai import Agent
+
+
+async def main() -> None:
+    """Main function"""
+    agent = Agent("openai:gpt-4o-mini", result_type=int)
+
+    result = await agent.run("長野オリンピックが開催された年は？")
+    print(f"result: {result.data}, data-type: {type(result.data)}")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+```shell:実行結果
+result: 1998, data-type: <class 'int'>
 ```
 
 ### Streaming Structured Responses
@@ -609,14 +709,14 @@ LLM アプリケーションのコードに対するテストは以下の 2 つ�
 
 ### Unit Test
 
-PydanticAI では、他の Python コードのユニットテストと同様に、pytest を利用してコードの振る舞いをテストすることができます。以下の機能を利用することで、LLM の回答生成をモックすることができ、ロジックが正しいかをテストすることができます。
+PydanticAI では、他の Python コードのユニットテストと同様に、pytest を利用してコードの振る舞いをテストすることができます。テスト時は以下の機能を利用することで、LLM の回答生成をダミーのレスポンスに置き換えることができます。これにより LLM による結果のばらつきに左右されることなく、実装したロジックが正しいかをテストすることができます。
 
 - `TestModel` : LLM の回答生成を任意の出力結果にモック
 - `FunctionModel` : モックのレスポンスを任意の関数で定義
 - `Agent.override` : エージェントのロジックを書き換え
 - `ALLOW_MODEL_REQUESTS=False` : テスト時に LLM への API リクエストをブロック
 
-以下は、[System Prompts](#system-prompts) で作成したエージェントのテストコードです。以下のコードでは、`TestModel` を利用して LLM の回答結果をモックすることで、`agent` に入力されるプロンプトが正しい結果であるかをテストすることができます。
+以下は、[System Prompts](#system-prompts) で作成したエージェントのテストコードです。この例では、`TestModel` を利用して LLM の回答結果をモックすることで、`agent` に入力されるプロンプトが設計通りであるかをテストすることができます。
 
 ```python:test_system_prompt.py
 """unit test sample"""
@@ -679,7 +779,7 @@ async def test_system_prompt_agent() -> None:
 ### Evals
 
 LLM により生成された agent の回答品質を評価します。
-PydanticAI において評価向けの機能が提供されているわけではありませんが、 `Agent.override` を活用して異なるパラメータを `agent` に渡してテストすることで、回答品質を効率的に比較評価することができます。
+PydanticAI において評価向けの機能が提供されているわけではありませんが、 前述の `Agent.override` を活用して異なるパラメータを `agent` に渡してテストすることで、効率的に回答品質を比較評価することができます。
 
 以下は異なるシステムプロンプトを渡して、agent が生成した回答文の toxicity（有害性）を比較評価した結果です。有害性の評価には [LangCheck](https://citadel-ai.com/ja/news/2023/10/12/announcing-langcheck/) の [`langcheck.metrics.ja.toxicity`](https://langcheck.readthedocs.io/en/latest/langcheck.metrics.ja.html#langcheck.metrics.ja.toxicity) を利用しました。
 
@@ -721,7 +821,7 @@ eval_system_prompts = [
     "あなたはツンデレなアシスタントです。",
     "あなたは常に生意気なアシスタントです。",
     "あなたは無礼なアシスタントです。",
-    "あなたは陽気な関西人です。",
+    "あなたはとてもお喋りで陽気な関西出身のアシスタントです。",
 ]
 
 
@@ -737,7 +837,6 @@ async def main() -> None:
                 f"system_prompt={system_prompt.system_prompt}\n"
                 f"result={result.data}\n"
                 f"toxicity={toxicity.metric_values[0]}\n",
-                "-" * 50 + "\n",
             )
 
 
@@ -745,7 +844,7 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-以下にシステムプロンプトごとの回答結果と有害性スコアを示します。スコアが高い程、有害性が高い回答結果になります。挑発的な表現は有害性が高いと判断されていますね。
+以下にシステムプロンプトごとの回答結果と有害性スコアを示します。スコアが高い程、有害性が高い回答結果になります。挑発的な表現の文章は有害性が高いと判断されていますね。
 
 ```shell:実行結果（一部整形）
 --------------------------------------------------
@@ -769,9 +868,9 @@ system_prompt=あなたは無礼なアシスタントです。
 result=東ティモールの首都はディリです。まあ、そんなことも知らないなんて、少し情けないね。
 toxicity=0.2380356341600418
 --------------------------------------------------
-system_prompt=あなたは陽気な関西人です。
-result=東ティモールの首都はディリ（Dili）やで！ここは美しいビーチもあって、自然がいっぱいの素敵なところなんや。その上、文化も豊かで、観光スポットもたくさんあるで。行ってみたくなるやろ？
-toxicity=0.160873144865036
+system_prompt=あなたはとてもお喋りで陽気な関西出身のアシスタントです。
+result=東ティモールの首都はディリ（Dili）やで！美しいビーチと豊かな文化がある素敵な場所や。何か他に知りたいことあったら、何でも聞いてや！
+toxicity=0.17354704439640045
 ```
 
 ## まとめ
