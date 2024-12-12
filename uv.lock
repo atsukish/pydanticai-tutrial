@@ -2209,14 +2209,14 @@ wheels = [
 
 [[package]]
 name = "pydantic-ai"
-version = "0.0.11"
+version = "0.0.12"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic-ai-slim", extra = ["groq", "openai", "vertexai"] },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/39/83/02246f0cd5ec5eb9c9021a85240cfb0f839bee76d34c03397a1a4fd3284d/pydantic_ai-0.0.11.tar.gz", hash = "sha256:a872c28da3bc79faa52de2640a77861b4eba9f802e5927d9ab295d6edf1d39fe", size = 40137 }
+sdist = { url = "https://files.pythonhosted.org/packages/5d/0d/846bcf91a22c8b167b3923fa4771d57d79635a32ad20bba3e6e9aa496ce1/pydantic_ai-0.0.12.tar.gz", hash = "sha256:e86ff5e5137be64c247a9ea1cf39867a96a92de28ed60440ec46fcc32ca8916c", size = 41669 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e2/15/0c8a39f49baed9ffccf4fa604de98070847494e1afb8131f9df86a373db6/pydantic_ai-0.0.11-py3-none-any.whl", hash = "sha256:3a3c3b136c644939cf14aa2f7bcf17e4ffd018f3189e40eb8e7d0c52262d4696", size = 8998 },
+    { url = "https://files.pythonhosted.org/packages/d7/4f/19046bd564a21cfc6d65e5053a6385aa170c312dd6b2ed9fa98218f03831/pydantic_ai-0.0.12-py3-none-any.whl", hash = "sha256:0dbfec39744a4ed87467bb0ce34c736cf6b3cade0256a7530e8b4a7c7c916afb", size = 8995 },
 ]
 
 [[package]]
@@ -2253,7 +2253,7 @@ requires-dist = [
     { name = "langchain-openai", specifier = ">=0.2.11" },
     { name = "langcheck", extras = ["ja"], specifier = ">=0.8.1" },
     { name = "pandas", specifier = ">=2.2.3" },
-    { name = "pydantic-ai", specifier = ">=0.0.11" },
+    { name = "pydantic-ai", specifier = ">=0.0.12" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
     { name = "tabulate", specifier = ">=0.9.0" },
 ]
@@ -2270,7 +2270,7 @@ dev = [
 
 [[package]]
 name = "pydantic-ai-slim"
-version = "0.0.11"
+version = "0.0.12"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "eval-type-backport" },
@@ -2279,9 +2279,9 @@ dependencies = [
     { name = "logfire-api" },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/de/78/558df0e720b1a6b47248b3bb8adf898eca9565118c2069857e589e6564d9/pydantic_ai_slim-0.0.11.tar.gz", hash = "sha256:1daffb54e213c3d17984f98ee53427f0eda832e1462d87bd2ff02a6d1e8f8258", size = 42971 }
+sdist = { url = "https://files.pythonhosted.org/packages/70/23/9c4674a7aa9d074fe54193ba4d9bda539d7faf498405c3b9f7e756f149df/pydantic_ai_slim-0.0.12.tar.gz", hash = "sha256:d4db0daa87cf232b4142cdb831902ddab814239bc5bf4894d01232b1bb37e646", size = 45152 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/80/1e/a7432bb8f17b8e72983bca778d934aa0402a587cbc30a8f2f231c2a0e831/pydantic_ai_slim-0.0.11-py3-none-any.whl", hash = "sha256:4ea8dfe27f356500caebc381d275fd38e210c83ac032197ad6c9f858a298dd4a", size = 57790 },
+    { url = "https://files.pythonhosted.org/packages/50/b4/3ea69019f75d32ef82d545c2ccfe83a482ee5e76836324c81cf82dbc6182/pydantic_ai_slim-0.0.12-py3-none-any.whl", hash = "sha256:8b3054229b15f99dc5d85a70ad8e2a70933b0eb7ee0dc8d649b9bc0269863f0c", size = 60674 },
 ]
 
 [package.optional-dependencies]

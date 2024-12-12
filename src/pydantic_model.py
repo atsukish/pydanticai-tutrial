@@ -6,23 +6,27 @@ from pydantic import BaseModel
 from pydantic_ai import Agent
 
 
-class CityLocation(BaseModel):
+class WorldCupInfo(BaseModel):
     """city location"""
 
-    city: str
-    """city name"""
-    country: str
-    """country name"""
+    year: int
+    """year"""
+    host_country: str
+    """host country name"""
+    winner: str | None
+    """winner country name"""
 
 
 async def main() -> None:
     """Main function"""
-    agent = Agent("openai:gpt-4o-mini", result_type=CityLocation)
+    agent = Agent("openai:gpt-4o-mini", result_type=list[WorldCupInfo])
 
-    result = await agent.run("2020年のオリンピック開催地は？")
+    result = await agent.run(
+        "1990年から2026年までのサッカーワールドカップの開催国と優勝国を列挙してください。",
+    )
 
-    print(result.data.model_dump())
-    print(result.cost())
+    for data in result.data:
+        print(data.model_dump())
 
 
 if __name__ == "__main__":
