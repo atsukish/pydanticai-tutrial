@@ -4,9 +4,11 @@
 
 [TRIAL＆RetailAI Advent Calendar 2024](https://qiita.com/advent-calendar/2024/retail-ai) の 13 日目の記事です。
 
-昨日は
+昨日は [@UtaMori](https://qiita.com/UtaMori) さんの『**フルスタック Next.js の新機軸！"Payload"で管理画面&WebAPI を自動生成！**』という記事でした。CMS として高機能な上に、システム開発に必要な全般の機能が提供されており、使いこなすことで開発効率の面で大きなメリットになりそうですね。
 
-Python ユーザーなら誰しもお世話になっているであろうデータバリデーションフレームワークである Pydantic の開発チームから、AI エージェントフレームワーク「Pydantic AI」が登場しました。
+https://qiita.com/UtaMori/items/531c30b46630d0c883a3
+
+本記事では、新しい AI エージェントフレームワークである「**Pydantic AI**」について紹介していきます。こちらは Python ユーザーなら誰しもお世話になっているであろうデータバリデーションフレームワークである [Pydantic](https://docs.pydantic.dev/latest/) の開発チームから公開されています。
 
 https://x.com/pydantic/status/1863538947059544218
 
@@ -43,20 +45,20 @@ https://github.com/pydantic/pydantic-ai
 
 https://ai.pydantic.dev/install/
 
-今回は [uv](https://github.com/astral-sh/uv) で環境構築してみます。
+今回は [uv](https://github.com/astral-sh/uv) で環境構築してみます。uv はいいぞ！
 
 ```shell
-uv add pydantic-ai
+$ uv add pydantic-ai
 ```
 
-執筆時点で最新のバージョンは `v0.0.11` でした。
+執筆時点で最新のバージョンは `v0.0.12` でした。
 
 ```shell
 # Display the project's dependency tree
-uv tree
+$ uv tree
 （省略）
-├── pydantic-ai v0.0.11
-│   └── pydantic-ai-slim[groq, openai, vertexai] v0.0.11
+├── pydantic-ai v0.0.12
+│   └── pydantic-ai-slim[groq, openai, vertexai] v0.0.12
 │       ├── eval-type-backport v0.2.0
 │       ├── griffe v1.5.1
 │       │   └── colorama v0.4.6
@@ -79,6 +81,13 @@ uv tree
 │       │       └── pyasn1 v0.6.1
 │       └── requests v2.32.3 (extra: vertexai) (*)
 （省略）
+```
+
+インストールした時点で、OpenAI と Gemini（VertexAI）、Groq のライブラリがインストールされます。個別のモデルのみを利用する場合は、 `pydantic-ai-slim` パッケージでモデル名を指定してインストールすれば良いとのことです。
+
+```shell
+# Using just OpenAI model
+$ uv add 'pydantic-ai-slim[openai]'
 ```
 
 ## Agents
@@ -122,9 +131,9 @@ if __name__ == "__main__":
 
 モデル（ここでは `gpt-4o-mini`）とシステムプロンプトを定義した `Agent` を作成し、`run` メソッドを呼び出すことで、出力結果を得ることができました。なお `agent` の実行メソッドは以下の 3 タイプがあります。
 
-- `agent.run()` — 非同期で実行
-- `agent.run_sync()` — 同期的に実行
-- `agent.run_stream()` — ストリーミングで実行
+- `agent.run()` : 非同期で実行
+- `agent.run_sync()` : 同期的に実行
+- `agent.run_stream()` : ストリーミングで実行
 
 また他のフレームワークと比較すると、よりシンプルに記述できることが特徴のようです。同じ処理を OpenAI の Python ライブラリ、LangChain と比較するとその差がわかりやすいかと思います。
 
@@ -469,21 +478,27 @@ from pydantic import BaseModel
 from pydantic_ai import Agent
 
 
-class CityLocation(BaseModel):
+class WorldCupInfo(BaseModel):
     """city location"""
 
-    city: str
-    """city name"""
-    country: str
-    """country name"""
+    year: int
+    """year"""
+    host_country: str
+    """host country name"""
+    winner: str | None
+    """winner country name"""
 
 
 async def main() -> None:
     """Main function"""
-    agent = Agent("openai:gpt-4o-mini", result_type=CityLocation)
+    agent = Agent("openai:gpt-4o-mini", result_type=list[WorldCupInfo])
 
-    result = await agent.run("2020年のオリンピック開催地は？")
-    print(result.data.model_dump())
+    result = await agent.run(
+        "1990年から2026年までのサッカーワールドカップの開催国と優勝国を列挙してください。",
+    )
+
+    for data in result.data:
+        print(data.model_dump())
 
 
 if __name__ == "__main__":
@@ -491,34 +506,52 @@ if __name__ == "__main__":
 
 ```
 
+ちょっと意地悪してみましたが、未開催の 2026 年のサッカーワールドカップの優勝国は `None` となり、期待した構造にパースすることができました。
+
 ```shell:実行結果
-{'city': '東京', 'country': '日本'}
+{'year': 1990, 'host_country': 'イタリア', 'winner': '西ドイツ'}
+{'year': 1994, 'host_country': 'アメリカ', 'winner': 'ブラジル'}
+{'year': 1998, 'host_country': 'フランス', 'winner': 'フランス'}
+{'year': 2002, 'host_country': '韓国/日本', 'winner': 'ブラジル'}
+{'year': 2006, 'host_country': 'ドイツ', 'winner': 'イタリア'}
+{'year': 2010, 'host_country': '南アフリカ', 'winner': 'スペイン'}
+{'year': 2014, 'host_country': 'ブラジル', 'winner': 'ドイツ'}
+{'year': 2018, 'host_country': 'ロシア', 'winner': 'フランス'}
+{'year': 2022, 'host_country': 'カタール', 'winner': 'アルゼンチン'}
+{'year': 2026, 'host_country': 'アメリカ/カナダ/メキシコ', 'winner': None}
 ```
 
-Pydantic でスキーマを定義なくても、`result_type` に型を指定することで、構造化レスポンスを利用することができます。
+Pydantic でスキーマを定義なくても、`result_type` に `int` や `bool` などの単一のデータ型にも対応しています。
 
 ```python
 """Pydantic model example"""
 
 import asyncio
 
+from dotenv import load_dotenv
 from pydantic_ai import Agent
+
+load_dotenv()
 
 
 async def main() -> None:
     """Main function"""
-    agent = Agent("openai:gpt-4o-mini", result_type=int)
+    agent = Agent("openai:gpt-4o-mini", result_type=bool)
 
-    result = await agent.run("長野オリンピックが開催された年は？")
+    result = await agent.run(
+        "ケンタッキーフライドチキンの「カーネル・サンダース」のメガネには度が入っていない。◯か✕か。",
+    )
+
     print(f"result: {result.data}, data-type: {type(result.data)}")
 
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 ```
 
 ```shell:実行結果
-result: 1998, data-type: <class 'int'>
+result: True, data-type: <class 'bool'>
 ```
 
 ### Streaming Structured Responses
@@ -750,8 +783,8 @@ models.ALLOW_MODEL_REQUESTS = False
 async def test_system_prompt_agent() -> None:
     """Test system prompt"""
 
-    # agentをオーバーライドし、モックモデルを利用
-    with agent.override(model=TestModel(custom_result_text="モック回答だよ")):
+    # agentをオーバーライドし、任意の出力結果に置き換え
+    with agent.override(model=TestModel(custom_result_text="ダミー回答だよ")):
         prompt = "おはよう"
         username = "松本"
         _ = await agent.run(prompt, deps=username)
@@ -776,11 +809,28 @@ async def test_system_prompt_agent() -> None:
             role="user",
         ),
         ModelTextResponse(
-            content="モック回答だよ",
+            content="ダミー回答だよ",
             timestamp=IsNow(tz=timezone.utc),
             role="model-text-response",
         ),
     ]
+```
+
+あとはいつもどおり `pytest` を実行するだけです。
+
+```shell:実行結果
+$ uv run pytest src
+================================= test session starts =================================
+platform darwin -- Python 3.10.10, pytest-8.3.4, pluggy-1.5.0
+rootdir: /Users/hoge/foo/dev/pydanticai-tutrial
+configfile: pyproject.toml
+plugins: asyncio-0.24.0, anyio-4.7.0, dash-2.18.2
+asyncio: mode=auto, default_loop_scope=function
+collected 1 item
+
+src/test_system_prompt.py .                                                     [100%]
+
+================================== 1 passed in 1.49s ===================================
 ```
 
 ### Evals
@@ -884,9 +934,13 @@ toxicity=0.17354704439640045
 
 PydanticAI は、LLM フレームワークの中でも特にシンプルな記述で、システムプロンプトやツール、依存性注入などの機能を活用することで、より安全性の高い実装が実現できる印象を持ちました。この点は Pydantic のコンセプトが引き継がれていると感じました。
 
-一方でリリース直後の Beta 版であることもあり、対応モデルが少ない、ベクトル DB との連携は自前で実装が必要など、LLM エコシステムとの連携という点では先発の LangChain や LlamaIndex などのフレームワークと比較すると、まだ発展途上であると感じました。
+一方でリリース直後の Beta 版であることもあり、対応モデルが少ない、ベクトルデータベース等の連携は自前で実装が必要など、LLM エコシステムとの連携という点では先発の LangChain や LlamaIndex などのフレームワークと比較すると、まだ発展途上であると感じました。
 
-今後 LLM によるマルチエージェントが発展していくことが想定されますが、エージェント間のやりとりでインターフェースが明示的に宣言されてたほうが良いケースもでてくると思います。その際は Pydantic（および PydanticAI も）は非常に強力なツールになるかもしれません。
+今後 LLM によるマルチエージェントが発展していくことが想定されますが、エージェント間のやりとりでインターフェースが明示的に宣言されてたほうが良いケースもでてくると思います。その際は Pydantic および PydanticAI は非常に強力なツールになるかもしれません。
+
+---
+
+明日のアドベントカレンダーは、[@ikeda_takato](https://qiita.com/ikeda_takato) さんの『CVE-2024-10979 をローカルで再現してみる』です。脆弱性を再現？怖い！！
 
 最後になりますが、Retail AI と TRIAL ではエンジニアを募集しています。
 LLM などの 生成 AI に関する取り組みも行っておりますので、この記事を見て興味を持ったという方がいらっしゃいましたら、ぜひご連絡ください！

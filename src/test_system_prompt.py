@@ -18,11 +18,10 @@ models.ALLOW_MODEL_REQUESTS = False
 
 
 @pytest.mark.asyncio
-@pytest.mark.asyncio
 async def test_system_prompt_agent() -> None:
     """Test system prompt"""
     # モックモデルを利用
-    with agent.override(model=TestModel(custom_result_text="モック回答だよ")):
+    with agent.override(model=TestModel(custom_result_text="ダミー回答だよ")):
         prompt = "おはよう"
         username = "松本"
         _ = await agent.run(prompt, deps=username)
@@ -46,7 +45,7 @@ async def test_system_prompt_agent() -> None:
             role="user",
         ),
         ModelTextResponse(
-            content="モック回答だよ",
+            content="ダミー回答だよ",
             timestamp=IsNow(tz=timezone.utc),
             role="model-text-response",
         ),
